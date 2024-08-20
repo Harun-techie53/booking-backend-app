@@ -1,5 +1,6 @@
 import express from "express";
 import dotenv from "dotenv";
+import cors from "cors";
 import cookieParser from "cookie-parser";
 dotenv.config();
 import dbConnect from "../config/db.config";
@@ -14,6 +15,13 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
+
+app.use(
+  cors({
+    origin: "*",
+    credentials: true,
+  })
+);
 
 dbConnect();
 
