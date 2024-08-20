@@ -1,13 +1,4 @@
 "use strict";
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -19,31 +10,30 @@ const Hotel_1 = __importDefault(require("../models/Hotel"));
 const appError_1 = __importDefault(require("../utils/appError"));
 const stripe_1 = __importDefault(require("stripe"));
 const stripe = new stripe_1.default(process.env.STRIPE_API_KEY);
-exports.getHotels = (0, catchAsync_1.default)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a;
+exports.getHotels = (0, catchAsync_1.default)(async (req, res, next) => {
     const features = new apiFeatures_1.default(Hotel_1.default.find(), req.query)
         .filter()
         .sort()
         .fields()
         .paginate();
-    const hotels = yield features.query;
-    const total_documents = yield features.totalCountDocuments();
+    const hotels = await features.query;
+    const total_documents = await features.totalCountDocuments();
     res.status(200).json({
         status: "success",
         meta: {
             current_page: parseInt(features.queryString.page),
             page_size: parseInt(features.queryString.limit),
             total_pages: Math.ceil(parseInt(total_documents.toString()) /
-                parseInt((_a = features.queryString.limit) === null || _a === void 0 ? void 0 : _a.toString())),
+                parseInt(features.queryString.limit?.toString())),
             total_documents,
         },
         data: {
             hotels,
         },
     });
-}));
-exports.getHotel = (0, catchAsync_1.default)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-    const hotel = yield Hotel_1.default.findById(req.params.hotelId);
+});
+exports.getHotel = (0, catchAsync_1.default)(async (req, res, next) => {
+    const hotel = await Hotel_1.default.findById(req.params.hotelId);
     if (!hotel) {
         return next(new appError_1.default("Hotel not found", 404));
     }
@@ -53,11 +43,11 @@ exports.getHotel = (0, catchAsync_1.default)((req, res, next) => __awaiter(void 
             hotel,
         },
     });
-}));
-exports.createStripePaymentIntent = (0, catchAsync_1.default)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+});
+exports.createStripePaymentIntent = (0, catchAsync_1.default)(async (req, res, next) => {
     console.log('hit this route');
     //find the hotel
-    const hotel = yield Hotel_1.default.findById(req.params.hotelId);
+    const hotel = await Hotel_1.default.findById(req.params.hotelId);
     if (!hotel) {
         return next(new appError_1.default("Hotel not found", 404));
     }
@@ -65,7 +55,7 @@ exports.createStripePaymentIntent = (0, catchAsync_1.default)((req, res, next) =
     const numberOfNights = req.body.numberOfNights;
     const totalCost = numberOfNights * hotel.pricePerNight;
     // create stripe payment intent
-    const paymentIntent = yield stripe.paymentIntents.create({
+    const paymentIntent = await stripe.paymentIntents.create({
         amount: totalCost * 100,
         currency: "usd",
         payment_method_types: ["card"],
@@ -90,10 +80,10 @@ exports.createStripePaymentIntent = (0, catchAsync_1.default)((req, res, next) =
             response,
         },
     });
-}));
-exports.createPaymentConfirmationBooking = (0, catchAsync_1.default)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+});
+exports.createPaymentConfirmationBooking = (0, catchAsync_1.default)(async (req, res, next) => {
     //find the paymentIntent
-    const paymentIntent = yield stripe.paymentIntents.retrieve(req.body.paymentIntentId);
+    const paymentIntent = await stripe.paymentIntents.retrieve(req.body.paymentIntentId);
     if (!paymentIntent) {
         return next(new appError_1.default("Payment intent not found", 404));
     }
@@ -106,9 +96,12 @@ exports.createPaymentConfirmationBooking = (0, catchAsync_1.default)((req, res, 
         return next(new appError_1.default("Mismatch with the stripe payment intent", 400));
     }
     //create a updated booking
-    const newBooking = Object.assign(Object.assign({}, req.body), { userId: req.userId });
+    const newBooking = {
+        ...req.body,
+        userId: req.userId,
+    };
     //create the updated instance of hotel with the updated booking
-    const hotel = yield Hotel_1.default.findOneAndUpdate({ _id: req.params.hotelId }, { $push: { bookings: newBooking } });
+    const hotel = await Hotel_1.default.findOneAndUpdate({ _id: req.params.hotelId }, { $push: { bookings: newBooking } });
     //check for the hotel exist or not
     if (!hotel) {
         return next(new appError_1.default("Hotel not found", 404));
@@ -121,4 +114,4 @@ exports.createPaymentConfirmationBooking = (0, catchAsync_1.default)((req, res, 
             hotel,
         },
     });
-}));
+});

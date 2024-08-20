@@ -1,13 +1,4 @@
 "use strict";
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -55,17 +46,15 @@ const userSchema = new mongoose_1.Schema({
         default: Date.now(),
     },
 });
-userSchema.pre("save", function (next) {
-    return __awaiter(this, void 0, void 0, function* () {
-        // if password is not modified then go to next
-        if (!this.isModified("password"))
-            return next();
-        // if password is modified
-        this.password = yield bcryptjs_1.default.hash(this.password, 12);
-        //after hashing the password simply delete the confirm password
-        this.passwordConfirm = undefined;
-        next();
-    });
+userSchema.pre("save", async function (next) {
+    // if password is not modified then go to next
+    if (!this.isModified("password"))
+        return next();
+    // if password is modified
+    this.password = await bcryptjs_1.default.hash(this.password, 12);
+    //after hashing the password simply delete the confirm password
+    this.passwordConfirm = undefined;
+    next();
 });
 // userSchema.pre('save', function(next) {
 //     if(!(this.isModified('password'))) {
@@ -89,11 +78,9 @@ userSchema.pre("save", function (next) {
 //     this.passwordResetExpires = Date.now() + 10 * 60 * 1000;
 //     return resetToken;
 // };
-userSchema.methods.matchPassword = function matchPassword(candidatePassword, userPassword) {
-    return __awaiter(this, void 0, void 0, function* () {
-        const isMatch = yield bcryptjs_1.default.compare(candidatePassword, userPassword);
-        return isMatch;
-    });
+userSchema.methods.matchPassword = async function matchPassword(candidatePassword, userPassword) {
+    const isMatch = await bcryptjs_1.default.compare(candidatePassword, userPassword);
+    return isMatch;
 };
 // userSchema.pre(/^find/, function(next) {
 //     this.select('-password');

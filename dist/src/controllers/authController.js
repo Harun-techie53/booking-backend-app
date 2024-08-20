@@ -1,13 +1,4 @@
 "use strict";
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -46,8 +37,8 @@ const createSendToken = (user, res) => {
         },
     });
 };
-const getCurrentUser = (0, catchAsync_1.default)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-    const user = yield User_1.default.findById(req.userId).select("-password -__v");
+const getCurrentUser = (0, catchAsync_1.default)(async (req, res, next) => {
+    const user = await User_1.default.findById(req.userId).select("-password -__v");
     if (!user) {
         return next(new appError_1.default("User not found", 404));
     }
@@ -57,9 +48,9 @@ const getCurrentUser = (0, catchAsync_1.default)((req, res, next) => __awaiter(v
             user,
         },
     });
-}));
+});
 exports.getCurrentUser = getCurrentUser;
-const signUpUser = (0, catchAsync_1.default)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+const signUpUser = (0, catchAsync_1.default)(async (req, res, next) => {
     const { name, email, password, passwordConfirm } = req.body;
     const user = new User_1.default({
         name,
@@ -67,29 +58,29 @@ const signUpUser = (0, catchAsync_1.default)((req, res, next) => __awaiter(void 
         password,
         passwordConfirm,
     });
-    yield user.save();
+    await user.save();
     createSendToken(user, res);
-}));
+});
 exports.signUpUser = signUpUser;
-const signInUser = (0, catchAsync_1.default)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+const signInUser = (0, catchAsync_1.default)(async (req, res, next) => {
     const { email, password } = req.body;
     if (!email || !password) {
         const err = new appError_1.default("Please, enter email and password", 400);
         return next(err);
     }
-    const user = yield User_1.default.findOne({ email }).select("+password");
+    const user = await User_1.default.findOne({ email }).select("+password");
     if (!user) {
         return next(new appError_1.default("Invalid Credentials!", 401));
     }
-    const isPasswordMatch = yield user.matchPassword(password, user.password);
+    const isPasswordMatch = await user.matchPassword(password, user.password);
     if (!isPasswordMatch) {
         return next(new appError_1.default("Invalid Credentials!", 401));
     }
     createSendToken(user, res);
-}));
+});
 exports.signInUser = signInUser;
-const validateToken = (0, catchAsync_1.default)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-    const user = yield User_1.default.findById(req.userId).select("-password");
+const validateToken = (0, catchAsync_1.default)(async (req, res, next) => {
+    const user = await User_1.default.findById(req.userId).select("-password");
     res.status(200).json({
         status: "success",
         message: "Token Validated Successfully",
@@ -97,9 +88,9 @@ const validateToken = (0, catchAsync_1.default)((req, res, next) => __awaiter(vo
             user,
         },
     });
-}));
+});
 exports.validateToken = validateToken;
-const logOutUser = (0, catchAsync_1.default)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+const logOutUser = (0, catchAsync_1.default)(async (req, res, next) => {
     res.cookie("jwt", "", {
         expires: new Date(0),
     });
@@ -107,5 +98,5 @@ const logOutUser = (0, catchAsync_1.default)((req, res, next) => __awaiter(void 
         status: "success",
         message: "User Logout Successfully",
     });
-}));
+});
 exports.logOutUser = logOutUser;

@@ -1,21 +1,14 @@
 "use strict";
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 class APIFeatures {
+    query;
+    queryString;
     constructor(query, queryString) {
         this.query = query;
         this.queryString = queryString;
     }
     filter() {
-        const queryObj = Object.assign({}, this.queryString);
+        const queryObj = { ...this.queryString };
         const excludedObj = ["page", "sort", "limit", "fields"];
         excludedObj.forEach((el) => delete queryObj[el]);
         let queryStrJSON = JSON.stringify(queryObj);
@@ -80,19 +73,17 @@ class APIFeatures {
         }
         return this;
     }
-    totalCountDocuments() {
-        return __awaiter(this, void 0, void 0, function* () {
-            try {
-                // Clone the query to avoid modifying the original query
-                const clonedQuery = this.query.model.find(Object.assign({}, this.query.getQuery()));
-                // Count the documents
-                const totalDocuments = yield clonedQuery.countDocuments();
-                return totalDocuments;
-            }
-            catch (error) {
-                throw new Error(`Error counting documents: ${error}`);
-            }
-        });
+    async totalCountDocuments() {
+        try {
+            // Clone the query to avoid modifying the original query
+            const clonedQuery = this.query.model.find({ ...this.query.getQuery() });
+            // Count the documents
+            const totalDocuments = await clonedQuery.countDocuments();
+            return totalDocuments;
+        }
+        catch (error) {
+            throw new Error(`Error counting documents: ${error}`);
+        }
     }
 }
 exports.default = APIFeatures;
