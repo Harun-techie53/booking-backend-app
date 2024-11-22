@@ -12,7 +12,7 @@ const getJwtToken = (id: string) => {
 
 interface CookieOption {
   expires: Date;
-  httpOnly: boolean;
+  httpOnly?: boolean;
   secure?: boolean;
 }
 
@@ -26,8 +26,7 @@ const createSendToken = (user: User, res: Response) => {
           60 *
           60 *
           1000
-    ),
-    httpOnly: true,
+    )
   };
 
   if (process.env.NODE_ENV === "production") cookieOptions.secure = true;
